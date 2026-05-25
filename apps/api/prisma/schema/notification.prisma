@@ -1,0 +1,50 @@
+model Notification {
+  id               String             @id @default(uuid()) @db.Uuid
+  hospitalId       String             @map("hospital_id") @db.Uuid
+  patientId        String?            @map("patient_id") @db.Uuid
+  appointmentId    String?            @map("appointment_id") @db.Uuid
+  queueTokenId     String?            @map("queue_token_id") @db.Uuid
+  channel          NotificationChannel
+  notificationType String             @map("notification_type") @db.VarChar(50)
+  recipient        String             @db.VarChar(100)
+  message          String
+  status           NotificationStatus @default(PENDING)
+  providerResponse Json?              @map("provider_response")
+  scheduledAt      DateTime?          @map("scheduled_at") @db.Timestamp(6)
+  sentAt           DateTime?          @map("sent_at") @db.Timestamp(6)
+  failedAt         DateTime?          @map("failed_at") @db.Timestamp(6)
+  createdAt        DateTime           @default(now()) @map("created_at") @db.Timestamp(6)
+
+  hospital     Hospital     @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  patient      Patient?     @relation(fields: [patientId], references: [id])
+  appointment  Appointment? @relation(fields: [appointmentId], references: [id])
+  queueToken   QueueToken?  @relation(fields: [queueTokenId], references: [id])
+  smsLogs      SmsLog[]
+
+  @@index([hospitalId, status, scheduledAt])
+  @@index([patientId])
+  @@index([appointmentId])
+  @@index([queueTokenId])
+  @@map("notifications")
+}
+
+model SmsLog {
+  id                String   @id @default(uuid()) @db.Uuid
+  notificationId    String?  @map("notification_id") @db.Uuid
+  hospitalId        String   @map("hospital_id") @db.Uuid
+  providerName      String?  @map("provider_name") @db.VarChar(80)
+  providerMessageId String?  @map("provider_message_id") @db.VarChar(150)
+  phone             String?  @db.VarChar(30)
+  status            String?  @db.VarChar(30)
+  errorMessage      String?  @map("error_message")
+  rawResponse       Json?    @map("raw_response")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  notification Notification? @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  hospital     Hospital      @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+
+  @@index([notificationId])
+  @@index([hospitalId, createdAt])
+  @@index([providerMessageId])
+  @@map("sms_logs")
+}

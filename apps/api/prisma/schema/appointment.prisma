@@ -1,0 +1,34 @@
+model Appointment {
+  id              String            @id @default(uuid()) @db.Uuid
+  hospitalId      String            @map("hospital_id") @db.Uuid
+  patientId       String            @map("patient_id") @db.Uuid
+  doctorId        String            @map("doctor_id") @db.Uuid
+  departmentId    String            @map("department_id") @db.Uuid
+  appointmentDate DateTime          @map("appointment_date") @db.Date
+  startTime       DateTime          @map("start_time") @db.Time(6)
+  endTime         DateTime          @map("end_time") @db.Time(6)
+  status          AppointmentStatus @default(SCHEDULED)
+  bookingSource   BookingSource     @default(RECEPTION) @map("booking_source")
+  reason          String?
+  notes           String?
+  arrivedAt       DateTime?         @map("arrived_at") @db.Timestamp(6)
+  cancelledAt     DateTime?         @map("cancelled_at") @db.Timestamp(6)
+  completedAt     DateTime?         @map("completed_at") @db.Timestamp(6)
+  createdById     String?           @map("created_by") @db.Uuid
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt       DateTime          @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  hospital      Hospital       @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  patient       Patient        @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor        Doctor         @relation(fields: [doctorId], references: [id])
+  department    Department     @relation(fields: [departmentId], references: [id])
+  createdBy     User?          @relation("AppointmentCreatedBy", fields: [createdById], references: [id])
+  queueTokens   QueueToken[]
+  notifications Notification[]
+
+  @@unique([doctorId, appointmentDate, startTime])
+  @@index([hospitalId, doctorId, appointmentDate])
+  @@index([hospitalId, patientId])
+  @@index([hospitalId, status, appointmentDate])
+  @@map("appointments")
+}

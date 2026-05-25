@@ -1,0 +1,100 @@
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+
+  @@map("user_status")
+}
+
+enum DoctorStatus {
+  AVAILABLE
+  BUSY
+  BREAK
+  OFFLINE
+
+  @@map("doctor_status")
+}
+
+enum GenderType {
+  MALE
+  FEMALE
+  OTHER
+
+  @@map("gender_type")
+}
+
+enum VisitType {
+  QUEUE
+  APPOINTMENT
+  EMERGENCY
+  FOLLOW_UP
+
+  @@map("visit_type")
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  ARRIVED
+  CONVERTED_TO_QUEUE
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+
+  @@map("appointment_status")
+}
+
+enum BookingSource {
+  RECEPTION
+  ADMIN
+  PATIENT_PORTAL
+  PHONE_CALL
+
+  @@map("booking_source")
+}
+
+enum QueueStatus {
+  WAITING
+  CALLED
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+  CANCELLED
+
+  @@map("queue_status")
+}
+
+enum PriorityLevel {
+  NORMAL
+  PRIORITY
+  EMERGENCY
+
+  @@map("priority_level")
+}
+
+enum NotificationChannel {
+  SMS
+  EMAIL
+  WHATSAPP
+  PUSH
+
+  @@map("notification_channel")
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  CANCELLED
+
+  @@map("notification_status")
+}
+
+enum ScheduleExceptionType {
+  UNAVAILABLE
+  EXTRA_AVAILABLE
+  HOLIDAY
+  LEAVE
+
+  @@map("schedule_exception_type")
+}

@@ -1,0 +1,73 @@
+model Hospital {
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String   @db.VarChar(150)
+  logoUrl       String?  @map("logo_url")
+  address       String?
+  contactNumber String?  @map("contact_number") @db.VarChar(30)
+  timezone      String?  @default("Asia/Dhaka") @db.VarChar(80)
+  workingHours  Json?    @map("working_hours")
+  tokenSettings Json?    @map("token_settings")
+  isActive      Boolean? @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  departments          Department[]
+  rooms                Room[]
+  users                User[]
+  doctors              Doctor[]
+  doctorSchedules      DoctorSchedule[]
+  scheduleExceptions   DoctorScheduleException[]
+  patients             Patient[]
+  patientVisits        PatientVisit[]
+  appointments         Appointment[]
+  queueDailyCounters   QueueDailyCounter[]
+  queueTokens          QueueToken[]
+  queueTokenEvents     QueueTokenEvent[]
+  notifications        Notification[]
+  smsLogs              SmsLog[]
+  dailyQueueStats      DailyQueueStat[]
+  auditLogs            AuditLog[]
+
+  @@map("hospitals")
+}
+
+model Department {
+  id          String   @id @default(uuid()) @db.Uuid
+  hospitalId  String   @map("hospital_id") @db.Uuid
+  name        String   @db.VarChar(120)
+  code        String   @db.VarChar(20)
+  description String?
+  isActive    Boolean? @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  hospital           Hospital            @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  doctors            Doctor[]
+  patientVisits      PatientVisit[]
+  appointments       Appointment[]
+  queueDailyCounters QueueDailyCounter[]
+  queueTokens        QueueToken[]
+  dailyQueueStats    DailyQueueStat[]
+
+  @@unique([hospitalId, code])
+  @@unique([hospitalId, name])
+  @@index([hospitalId])
+  @@map("departments")
+}
+
+model Room {
+  id          String   @id @default(uuid()) @db.Uuid
+  hospitalId  String   @map("hospital_id") @db.Uuid
+  roomNumber  String   @map("room_number") @db.VarChar(50)
+  floor       String?  @db.VarChar(50)
+  description String?
+  isActive    Boolean? @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  hospital Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  doctors  Doctor[]
+
+  @@unique([hospitalId, roomNumber])
+  @@index([hospitalId])
+  @@map("rooms")
+}

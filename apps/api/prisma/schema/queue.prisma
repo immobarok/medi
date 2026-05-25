@@ -1,0 +1,89 @@
+model QueueDailyCounter {
+  id           String   @id @default(uuid()) @db.Uuid
+  hospitalId   String   @map("hospital_id") @db.Uuid
+  departmentId String?  @map("department_id") @db.Uuid
+  doctorId     String?  @map("doctor_id") @db.Uuid
+  queueDate    DateTime @map("queue_date") @db.Date
+  prefix       String   @db.VarChar(20)
+  lastSequence Int?     @default(0) @map("last_sequence")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  hospital   Hospital    @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  department Department? @relation(fields: [departmentId], references: [id])
+  doctor     Doctor?     @relation(fields: [doctorId], references: [id])
+
+  @@unique([hospitalId, departmentId, doctorId, queueDate])
+  @@index([hospitalId, queueDate])
+  @@map("queue_daily_counters")
+}
+
+model QueueToken {
+  id                 String        @id @default(uuid()) @db.Uuid
+  hospitalId         String        @map("hospital_id") @db.Uuid
+  patientId          String        @map("patient_id") @db.Uuid
+  visitId            String?       @map("visit_id") @db.Uuid
+  appointmentId      String?       @map("appointment_id") @db.Uuid
+  departmentId       String        @map("department_id") @db.Uuid
+  doctorId           String?       @map("doctor_id") @db.Uuid
+  queueDate          DateTime      @map("queue_date") @db.Date
+  tokenPrefix        String        @map("token_prefix") @db.VarChar(20)
+  tokenSequence      Int           @map("token_sequence")
+  tokenNumber        String        @map("token_number") @db.VarChar(50)
+  status             QueueStatus   @default(WAITING)
+  priorityLevel      PriorityLevel @default(NORMAL) @map("priority_level")
+  queuePosition      Int?          @map("queue_position")
+  createdById        String?       @map("created_by") @db.Uuid
+  calledById         String?       @map("called_by") @db.Uuid
+  completedById      String?       @map("completed_by") @db.Uuid
+  createdAt          DateTime      @default(now()) @map("created_at") @db.Timestamp(6)
+  calledAt           DateTime?     @map("called_at") @db.Timestamp(6)
+  startedAt          DateTime?     @map("started_at") @db.Timestamp(6)
+  completedAt        DateTime?     @map("completed_at") @db.Timestamp(6)
+  skippedAt          DateTime?     @map("skipped_at") @db.Timestamp(6)
+  cancelledAt        DateTime?     @map("cancelled_at") @db.Timestamp(6)
+  cancellationReason String?       @map("cancellation_reason")
+  notes              String?
+
+  hospital      Hospital          @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  patient       Patient           @relation(fields: [patientId], references: [id])
+  visit         PatientVisit?     @relation(fields: [visitId], references: [id])
+  appointment   Appointment?      @relation(fields: [appointmentId], references: [id])
+  department    Department        @relation(fields: [departmentId], references: [id])
+  doctor        Doctor?           @relation(fields: [doctorId], references: [id])
+  createdBy     User?             @relation("QueueTokenCreatedBy", fields: [createdById], references: [id])
+  calledBy      User?             @relation("QueueTokenCalledBy", fields: [calledById], references: [id])
+  completedBy   User?             @relation("QueueTokenCompletedBy", fields: [completedById], references: [id])
+  events        QueueTokenEvent[]
+  notifications Notification[]
+
+  @@unique([hospitalId, queueDate, tokenNumber])
+  @@index([hospitalId, doctorId, queueDate, priorityLevel, createdAt])
+  @@index([hospitalId, departmentId, queueDate, priorityLevel, createdAt])
+  @@index([hospitalId, queueDate, status])
+  @@index([hospitalId, patientId, queueDate])
+  @@index([appointmentId])
+  @@index([visitId])
+  @@map("queue_tokens")
+}
+
+model QueueTokenEvent {
+  id           String       @id @default(uuid()) @db.Uuid
+  hospitalId   String       @map("hospital_id") @db.Uuid
+  queueTokenId String       @map("queue_token_id") @db.Uuid
+  oldStatus    QueueStatus? @map("old_status")
+  newStatus    QueueStatus  @map("new_status")
+  action       String       @db.VarChar(80)
+  performedById String?     @map("performed_by") @db.Uuid
+  metadata     Json?
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamp(6)
+
+  hospital    Hospital   @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  queueToken  QueueToken @relation(fields: [queueTokenId], references: [id], onDelete: Cascade)
+  performedBy User?      @relation("QueueEventPerformedBy", fields: [performedById], references: [id])
+
+  @@index([queueTokenId, createdAt])
+  @@index([hospitalId, createdAt])
+  @@index([performedById])
+  @@map("queue_token_events")
+}

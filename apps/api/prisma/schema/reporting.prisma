@@ -1,0 +1,24 @@
+model DailyQueueStat {
+  id                     String   @id @default(uuid()) @db.Uuid
+  hospitalId             String   @map("hospital_id") @db.Uuid
+  departmentId           String?  @map("department_id") @db.Uuid
+  doctorId               String?  @map("doctor_id") @db.Uuid
+  reportDate             DateTime @map("report_date") @db.Date
+  totalTokens            Int?     @default(0) @map("total_tokens")
+  completedTokens        Int?     @default(0) @map("completed_tokens")
+  cancelledTokens        Int?     @default(0) @map("cancelled_tokens")
+  skippedTokens          Int?     @default(0) @map("skipped_tokens")
+  emergencyTokens        Int?     @default(0) @map("emergency_tokens")
+  avgWaitingSeconds      Int?     @default(0) @map("avg_waiting_seconds")
+  avgConsultationSeconds Int?     @default(0) @map("avg_consultation_seconds")
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  hospital   Hospital    @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  department Department? @relation(fields: [departmentId], references: [id])
+  doctor     Doctor?     @relation(fields: [doctorId], references: [id])
+
+  @@unique([hospitalId, departmentId, doctorId, reportDate])
+  @@index([hospitalId, reportDate])
+  @@map("daily_queue_stats")
+}

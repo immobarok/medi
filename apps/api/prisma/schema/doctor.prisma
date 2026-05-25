@@ -1,0 +1,73 @@
+model Doctor {
+  id                  String        @id @default(uuid()) @db.Uuid
+  hospitalId          String        @map("hospital_id") @db.Uuid
+  userId              String?       @unique @map("user_id") @db.Uuid
+  departmentId        String        @map("department_id") @db.Uuid
+  roomId              String?       @map("room_id") @db.Uuid
+  name                String        @db.VarChar(150)
+  specialization      String?       @db.VarChar(150)
+  qualification       String?       @db.VarChar(150)
+  consultationFee     Decimal?      @map("consultation_fee") @db.Decimal(10, 2)
+  status              DoctorStatus  @default(OFFLINE)
+  isAvailableForQueue Boolean?      @default(true) @map("is_available_for_queue")
+  isBookable          Boolean?      @default(true) @map("is_bookable")
+  createdAt           DateTime      @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt           DateTime      @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  hospital              Hospital                  @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  user                  User?                     @relation("DoctorUser", fields: [userId], references: [id], onDelete: SetNull)
+  department            Department               @relation(fields: [departmentId], references: [id])
+  room                  Room?                     @relation(fields: [roomId], references: [id])
+  schedules             DoctorSchedule[]
+  scheduleExceptions    DoctorScheduleException[]
+  patientVisits         PatientVisit[]
+  appointments          Appointment[]
+  queueDailyCounters    QueueDailyCounter[]
+  queueTokens           QueueToken[]
+  dailyQueueStats       DailyQueueStat[]
+
+  @@index([hospitalId, departmentId])
+  @@index([hospitalId, status])
+  @@index([userId])
+  @@index([roomId])
+  @@map("doctors")
+}
+
+model DoctorSchedule {
+  id                  String   @id @default(uuid()) @db.Uuid
+  hospitalId          String   @map("hospital_id") @db.Uuid
+  doctorId            String   @map("doctor_id") @db.Uuid
+  dayOfWeek           Int      @map("day_of_week") @db.SmallInt
+  startTime           DateTime @map("start_time") @db.Time(6)
+  endTime             DateTime @map("end_time") @db.Time(6)
+  slotDurationMinutes Int?     @default(15) @map("slot_duration_minutes")
+  maxPatients         Int?     @map("max_patients")
+  isActive            Boolean? @default(true) @map("is_active")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  hospital Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  doctor   Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@index([hospitalId, doctorId, dayOfWeek])
+  @@index([doctorId])
+  @@map("doctor_schedules")
+}
+
+model DoctorScheduleException {
+  id            String                @id @default(uuid()) @db.Uuid
+  hospitalId    String                @map("hospital_id") @db.Uuid
+  doctorId      String                @map("doctor_id") @db.Uuid
+  exceptionDate DateTime              @map("exception_date") @db.Date
+  startTime     DateTime?             @map("start_time") @db.Time(6)
+  endTime       DateTime?             @map("end_time") @db.Time(6)
+  exceptionType ScheduleExceptionType @map("exception_type")
+  reason        String?
+  createdAt     DateTime              @default(now()) @map("created_at") @db.Timestamp(6)
+
+  hospital Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  doctor   Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorId, exceptionDate, exceptionType])
+  @@index([hospitalId, doctorId, exceptionDate])
+  @@map("doctor_schedule_exceptions")
+}

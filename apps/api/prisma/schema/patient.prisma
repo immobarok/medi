@@ -1,0 +1,50 @@
+model Patient {
+  id              String      @id @default(uuid()) @db.Uuid
+  hospitalId      String      @map("hospital_id") @db.Uuid
+  patientCode     String      @map("patient_code") @db.VarChar(50)
+  fullName        String      @map("full_name") @db.VarChar(150)
+  phone           String      @db.VarChar(30)
+  normalizedPhone String      @map("normalized_phone") @db.VarChar(30)
+  age             Int?
+  gender          GenderType?
+  dateOfBirth     DateTime?   @map("date_of_birth") @db.Date
+  address         String?
+  createdAt       DateTime    @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt       DateTime    @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  hospital      Hospital       @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  visits        PatientVisit[]
+  appointments  Appointment[]
+  queueTokens   QueueToken[]
+  notifications Notification[]
+
+  @@unique([hospitalId, patientCode])
+  @@unique([hospitalId, normalizedPhone])
+  @@index([hospitalId, fullName])
+  @@index([hospitalId])
+  @@map("patients")
+}
+
+model PatientVisit {
+  id           String    @id @default(uuid()) @db.Uuid
+  hospitalId   String    @map("hospital_id") @db.Uuid
+  patientId    String    @map("patient_id") @db.Uuid
+  departmentId String?   @map("department_id") @db.Uuid
+  doctorId     String?   @map("doctor_id") @db.Uuid
+  visitDate    DateTime  @map("visit_date") @db.Date
+  visitType    VisitType @default(QUEUE) @map("visit_type")
+  notes        String?
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+
+  hospital    Hospital     @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  patient     Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  department  Department?  @relation(fields: [departmentId], references: [id])
+  doctor      Doctor?      @relation(fields: [doctorId], references: [id])
+  queueTokens QueueToken[]
+
+  @@index([hospitalId, patientId])
+  @@index([hospitalId, visitDate])
+  @@index([departmentId])
+  @@index([doctorId])
+  @@map("patient_visits")
+}
